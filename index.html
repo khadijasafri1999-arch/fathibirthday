@@ -33,13 +33,15 @@
   }
   body.bg-black{ background:#000; }
 
-  /* Background canvas layers */
+  /* Real fireworks canvas */
   canvas#fireworks{
     position:fixed; inset:0;
     width:100%; height:100%;
     pointer-events:none;
     z-index:1;
     display:none;
+    opacity:.55;
+    mix-blend-mode: screen;
   }
 
   .center{
@@ -57,17 +59,13 @@
     max-width: 980px;
     white-space: pre-line;
     text-shadow: 0 0 26px rgba(0,0,0,.35);
-    transition: opacity .35s ease, transform .35s ease;
-    opacity:1;
   }
 
-  /* sizes */
   .n{ font-size: clamp(96px, 20vw, 180px); font-weight:1000; line-height:1; letter-spacing:2px; }
   .msg{ font-size: clamp(18px, 3.8vw, 30px); font-weight:850; line-height:1.55; }
   .love{ font-size: clamp(28px, 8vw, 56px); font-weight:1000; }
   .hb{ font-size: clamp(30px, 8.5vw, 62px); font-weight:1000; }
 
-  /* To Fathi title */
   .toTitle{
     font-size: clamp(22px, 5.5vw, 40px);
     font-weight: 1000;
@@ -210,13 +208,14 @@
   const screen = document.getElementById("screen");
   const giftBtn = document.getElementById("giftBtn");
   const panel = document.getElementById("panel");
+
   const fireworksCanvas = document.getElementById("fireworks");
   const fctx = fireworksCanvas.getContext("2d");
 
-  // ✅ phrase corrigée + coeur
+  // ✅ corrected phrase + heart
   const wishLine = "I want you all to wish a happy birthday to my man ❤️";
 
-  // ✅ Ton texte : je ne change RIEN au contenu
+  // ✅ your message (UNCHANGED)
   const loveText =
 "Je n’arrive même pas à expliquer à quel point je suis reconnaissante de t’avoir dans ma vie. "+
 "Avec toi, je me sens en sécurité, aimée, choisie… et tellement fière d’être ta femme.\n\n"+
@@ -225,19 +224,19 @@
 "Tu es mon calme, ma force, mon bonheur. Je suis super chanceuse… vraiment.\n\n"+
 "Merci d’être toi, merci d'avoir tenu à ta promesse...";
 
-  // --- Steps (we only change what you asked) ---
+  // --- timing (To Fathi ~ 15 sec) ---
+  const TO_FATHI_MS = 15000;
+
+  // --- Steps: only intro/message changed like you asked ---
   const steps = [
     { type:"text", cls:"n", text:"1", ms:900, bg:"black", fireworks:false },
     { type:"text", cls:"n", text:"2", ms:900, bg:"black", fireworks:false },
     { type:"text", cls:"n", text:"3", ms:900, bg:"black", fireworks:false },
 
-    // galaxy pink + real fireworks
-    { type:"text", cls:"msg", text:wishLine, ms:2600, bg:"galaxy", fireworks:true },
+    { type:"text", cls:"msg", text:wishLine, ms:2800, bg:"galaxy", fireworks:true },
 
-    // To Fathi title + message underneath (same content)
-    { type:"toFathi", ms:8200, bg:"galaxy", fireworks:true },
+    { type:"toFathi", ms:TO_FATHI_MS, bg:"galaxy", fireworks:true },
 
-    // keep the rest like before (you can adjust later if you want)
     { type:"text", cls:"love", text:"Je t’aime plus que tu l'imagines 💞", ms:2400, bg:"galaxy", fireworks:true },
     { type:"text", cls:"hb", text:"Happy birthday mon amour 🎂✨", ms:999999, bg:"galaxy", fireworks:true, showGifts:true }
   ];
@@ -248,7 +247,7 @@
     if(kind === "galaxy") document.body.classList.add("bg-galaxy");
   }
 
-  // -------- Fireworks (real canvas) ----------
+  // -------- Realistic GOLD fireworks (soft) ----------
   let fw = [];
   let fwTimer = null;
   let animating = false;
@@ -268,36 +267,59 @@
     const y = innerHeight + 20;
     const tx = x + (Math.random()*120 - 60);
     const ty = Math.random()*innerHeight*0.35 + innerHeight*0.12;
+
     fw.push({
       phase:"launch",
       x,y,
-      vx:(tx-x)/30,
-      vy:(ty-y)/30,
+      vx:(tx-x)/32,          // slower
+      vy:(ty-y)/32,
       life:0,
       color: rand([
-        "rgba(255,154,214,1)",
-        "rgba(255,91,181,1)",
-        "rgba(178,140,255,1)",
-        "rgba(126,240,255,1)",
-        "rgba(255,255,255,1)"
+        "rgba(255, 214, 102, 1)",  // gold
+        "rgba(255, 198, 64, 1)",   // deep gold
+        "rgba(255, 236, 170, 1)",  // pale gold
+        "rgba(255, 224, 130, 1)",  // warm gold
+        "rgba(255, 255, 255, 1)"   // sparkle white
       ])
     });
   }
 
   function explode(p){
-    const parts = 90 + Math.floor(Math.random()*60);
+    // fewer particles = less disturbing
+    const parts = 55 + Math.floor(Math.random()*25);
+
     for(let i=0;i<parts;i++){
       const ang = Math.random()*Math.PI*2;
-      const sp = Math.random()*4.8 + 1.2;
+      const sp = Math.random()*3.2 + 0.8; // softer speed
+
       fw.push({
         phase:"spark",
         x:p.x, y:p.y,
         vx: Math.cos(ang)*sp,
         vy: Math.sin(ang)*sp,
-        g: 0.06 + Math.random()*0.03,
-        a: 1,
-        r: 1 + Math.random()*1.6,
-        color: p.color
+        g: 0.055 + Math.random()*0.02,
+        a: 0.95,
+        r: 0.9 + Math.random()*1.2,
+        color: p.color,
+        drag: 0.985 + Math.random()*0.01
+      });
+    }
+
+    // light twinkles
+    const twinkles = 10 + Math.floor(Math.random()*8);
+    for(let i=0;i<twinkles;i++){
+      const ang = Math.random()*Math.PI*2;
+      const sp = Math.random()*2.2 + 0.3;
+      fw.push({
+        phase:"spark",
+        x:p.x, y:p.y,
+        vx: Math.cos(ang)*sp,
+        vy: Math.sin(ang)*sp,
+        g: 0.04 + Math.random()*0.015,
+        a: 0.7,
+        r: 0.7 + Math.random()*0.8,
+        color: "rgba(255,255,255,1)",
+        drag: 0.99
       });
     }
   }
@@ -305,7 +327,8 @@
   function draw(){
     if(!animating) return;
 
-    fctx.fillStyle = "rgba(0,0,0,.12)";
+    // very soft fade (no harsh flashing)
+    fctx.fillStyle = "rgba(0,0,0,.06)";
     fctx.fillRect(0,0,innerWidth,innerHeight);
 
     const next = [];
@@ -314,20 +337,29 @@
         p.life++;
         p.x += p.vx; p.y += p.vy;
 
+        // small launch glow
         fctx.beginPath();
         fctx.fillStyle = p.color;
-        fctx.arc(p.x, p.y, 2.2, 0, Math.PI*2);
+        fctx.arc(p.x, p.y, 2.0, 0, Math.PI*2);
         fctx.fill();
 
-        if(p.life >= 30){
+        if(p.life >= 32){
           explode(p);
         } else {
           next.push(p);
         }
       } else {
+        // gentle drag
+        const drag = p.drag || 0.99;
+        p.vx *= drag;
+        p.vy *= drag;
+
         p.vy += p.g;
-        p.x += p.vx; p.y += p.vy;
-        p.a -= 0.016 + Math.random()*0.01;
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // slower fade
+        p.a -= 0.010 + Math.random()*0.006;
 
         if(p.a > 0){
           fctx.beginPath();
@@ -349,8 +381,8 @@
     animating = true;
     fw = [];
     if(fwTimer) clearInterval(fwTimer);
-    fwTimer = setInterval(launch, 420);
-    for(let i=0;i<4;i++) setTimeout(launch, i*160);
+    fwTimer = setInterval(launch, 850); // slower rhythm
+    for(let i=0;i<2;i++) setTimeout(launch, i*250);
     draw();
   }
 
@@ -363,10 +395,10 @@
   }
 
   // -------- Sequence rendering ----------
-  let idx = 0;
+  let stepIndex = 0;
 
   function renderStep(){
-    const s = steps[idx];
+    const s = steps[stepIndex];
 
     if(s.bg) setBg(s.bg);
 
@@ -381,20 +413,21 @@
     if(s.type === "text"){
       screen.className = s.cls;
       screen.textContent = s.text;
-      if(s.showGifts) giftBtn.style.display = "block";
 
+      if(s.showGifts) giftBtn.style.display = "block";
       if(s.cls === "hb") return;
-      setTimeout(()=>{ idx++; renderStep(); }, s.ms);
+
+      setTimeout(()=>{ stepIndex++; renderStep(); }, s.ms);
       return;
     }
 
     if(s.type === "toFathi"){
-      // Title + message under (you asked: title then go down)
       screen.className = "msg";
       screen.innerHTML =
         `<div class="toTitle">To Fathi ❤️</div>` +
         `<div>${loveText.replaceAll("\n","<br>")}</div>`;
-      setTimeout(()=>{ idx++; renderStep(); }, s.ms);
+
+      setTimeout(()=>{ stepIndex++; renderStep(); }, s.ms);
       return;
     }
   }
