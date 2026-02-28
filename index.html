@@ -7,50 +7,87 @@
 
 <style>
   :root{
-    --pink:#ff5bb5; --pink2:#ff9ad6; --violet:#b28cff; --text:#fff6fb; --muted:rgba(255,255,255,.82);
+    --pink:#ff5bb5; --pink2:#ff9ad6; --violet:#b28cff; --cyan:#7ef0ff;
+    --text:#fff6fb; --muted:rgba(255,255,255,.82);
   }
+  *{box-sizing:border-box}
+  html,body{height:100%}
   body{
     margin:0;
+    overflow:hidden;
     font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    background: linear-gradient(180deg,#16012d,#070014);
-    color:white;
+    color: var(--text);
     text-align:center;
+    background:#000;
     transition: background .6s ease;
   }
 
-  /* Full screen center */
+  /* Galaxy pink (dark tendency) */
+  body.bg-galaxy{
+    background:
+      radial-gradient(1200px 700px at 10% 15%, rgba(255,91,181,.45), transparent 60%),
+      radial-gradient(900px 600px at 85% 20%, rgba(178,140,255,.40), transparent 60%),
+      radial-gradient(900px 600px at 50% 90%, rgba(126,240,255,.18), transparent 62%),
+      radial-gradient(1000px 600px at 40% 50%, rgba(255,154,214,.25), transparent 70%),
+      linear-gradient(180deg, #16012d, #070014);
+  }
+  body.bg-black{ background:#000; }
+
+  /* Background canvas layers */
+  canvas#fireworks{
+    position:fixed; inset:0;
+    width:100%; height:100%;
+    pointer-events:none;
+    z-index:1;
+    display:none;
+  }
+
   .center{
-    height:100vh;
+    position:relative;
+    z-index:2;
+    height:100%;
     display:flex;
     align-items:center;
     justify-content:center;
-    padding:20px;
+    padding: 18px;
+    text-align:center;
   }
 
-  #screen{ white-space:pre-line; transition: opacity .35s ease; }
+  #screen{
+    max-width: 980px;
+    white-space: pre-line;
+    text-shadow: 0 0 26px rgba(0,0,0,.35);
+    transition: opacity .35s ease, transform .35s ease;
+    opacity:1;
+  }
 
-  .n{ font-size: clamp(90px, 22vw, 170px); font-weight:900; }
-  .msg{ font-size: clamp(18px, 4.2vw, 28px); max-width:900px; line-height:1.5; font-weight:800; }
+  /* sizes */
+  .n{ font-size: clamp(96px, 20vw, 180px); font-weight:1000; line-height:1; letter-spacing:2px; }
+  .msg{ font-size: clamp(18px, 3.8vw, 30px); font-weight:850; line-height:1.55; }
   .love{ font-size: clamp(28px, 8vw, 56px); font-weight:1000; }
   .hb{ font-size: clamp(30px, 8.5vw, 62px); font-weight:1000; }
 
-  button{
-    padding:12px 18px;
-    border:none;
-    border-radius:14px;
-    font-weight:900;
-    cursor:pointer;
-    background:#ff9ad6;
-    margin-top:20px;
+  /* To Fathi title */
+  .toTitle{
+    font-size: clamp(22px, 5.5vw, 40px);
+    font-weight: 1000;
+    margin-bottom: 14px;
   }
 
+  /* gifts button */
   #giftBtn{
     position:fixed;
     left:50%;
     bottom:18px;
     transform: translateX(-50%);
     display:none;
-    background:#ff9ad6;
+    border:none;
+    cursor:pointer;
+    padding:14px 16px;
+    border-radius:20px;
+    font-weight:1000;
+    color:#180014;
+    background: linear-gradient(135deg, var(--pink2), var(--violet));
     box-shadow: 0 18px 40px rgba(0,0,0,.25);
     z-index:5;
   }
@@ -74,8 +111,6 @@
     background: rgba(255,255,255,.08);
     border: 1px solid rgba(255,255,255,.14);
   }
-
-  /* Envelopes */
   .envelope{
     background:#ffffff14;
     padding:18px;
@@ -84,8 +119,24 @@
     cursor:pointer;
     border: 1px solid rgba(255,255,255,.14);
   }
+  .backBtn{
+    padding:12px 18px;
+    border:none;
+    border-radius:14px;
+    font-weight:900;
+    cursor:pointer;
+    background: rgba(255,255,255,.14);
+    color:white;
+    margin-top:10px;
+  }
+  video{
+    width:100%;
+    margin-top:16px;
+    border-radius:16px;
+    background: rgba(0,0,0,.35);
+    border: 1px solid rgba(255,255,255,.14);
+  }
 
-  /* Slideshow */
   .slideshow{
     position:relative;
     width:100%;
@@ -97,75 +148,18 @@
     border: 1px solid rgba(255,255,255,.14);
   }
   .slide{
-    position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
+    position:absolute; inset:0;
+    width:100%; height:100%;
     object-fit:cover;
     opacity:0;
     transition:opacity .9s;
   }
   .slide.show{ opacity:1; }
-
-  .backBtn{
-    background: rgba(255,255,255,.14);
-    color:white;
-  }
-
-  video{
-    width:100%;
-    margin-top:16px;
-    border-radius:16px;
-    background: rgba(0,0,0,.35);
-    border: 1px solid rgba(255,255,255,.14);
-  }
-
-  /* Fireworks (CSS) */
-  .fireworks{
-    position:fixed;
-    inset:0;
-    pointer-events:none;
-    display:none;
-    z-index:2;
-  }
-  .fw{
-    position:absolute; left:50%; top:50%;
-    transform: translate(-50%,-50%);
-    font-size: 34px;
-    opacity:0;
-    animation: pop 1.2s ease-out infinite;
-    filter: drop-shadow(0 0 14px rgba(255,154,214,.35));
-  }
-  .fw:nth-child(1){ margin-left:-120px; margin-top:-90px; animation-delay:0s; }
-  .fw:nth-child(2){ margin-left: 140px; margin-top:-80px; animation-delay:.2s; }
-  .fw:nth-child(3){ margin-left:-160px; margin-top: 90px; animation-delay:.35s; }
-  .fw:nth-child(4){ margin-left: 120px; margin-top: 110px; animation-delay:.5s; }
-  .fw:nth-child(5){ margin-left: 0px;  margin-top: -140px; animation-delay:.65s; }
-  @keyframes pop{
-    0%{ transform: translate(-50%,-50%) scale(.7); opacity:0; }
-    20%{ opacity:1; }
-    100%{ transform: translate(-50%,-50%) scale(1.25); opacity:0; }
-  }
-
-  /* Screen is above fireworks */
-  .center{ position:relative; z-index:3; }
-
-  /* Black intro + pink special background */
-  body.bg-black{ background:#000; }
-  body.bg-pink{
-    background:
-      radial-gradient(900px 600px at 20% 20%, rgba(255,91,181,.55), transparent 60%),
-      radial-gradient(900px 600px at 80% 30%, rgba(255,154,214,.42), transparent 62%),
-      linear-gradient(180deg, #ff5bb5, #7a003c);
-  }
 </style>
 </head>
 
 <body class="bg-black">
-
-<div class="fireworks" id="fireworks">
-  <div class="fw">🎆</div><div class="fw">🎇</div><div class="fw">🎆</div><div class="fw">🎇</div><div class="fw">🎆</div>
-</div>
+<canvas id="fireworks"></canvas>
 
 <div class="center">
   <div id="screen"></div>
@@ -187,13 +181,11 @@
     <div id="gift1" style="display:none;">
       <button class="backBtn" onclick="back()">← Revenir</button>
       <h3>🎥 Gift 1</h3>
-
       <video id="videoGift1"
              src="gift1.mp4"
              controls
              playsinline
-             preload="metadata">
-      </video>
+             preload="metadata"></video>
     </div>
 
     <!-- Gift 2 -->
@@ -218,71 +210,198 @@
   const screen = document.getElementById("screen");
   const giftBtn = document.getElementById("giftBtn");
   const panel = document.getElementById("panel");
-  const fireworks = document.getElementById("fireworks");
+  const fireworksCanvas = document.getElementById("fireworks");
+  const fctx = fireworksCanvas.getContext("2d");
 
-  // ✅ Phrase corrigée (juste correction orthographe)
-  const wishLine = "I want you all to wish a happy birthday to my man.";
+  // ✅ phrase corrigée + coeur
+  const wishLine = "I want you all to wish a happy birthday to my man ❤️";
 
-  // ✅ Ton texte: je ne change rien au contenu (je le mets juste dans une string)
-  const toFathiText =
-"To Fathi : e n’arrive même pas à expliquer à quel point je suis reconnaissante de t’avoir dans ma vie. "+
+  // ✅ Ton texte : je ne change RIEN au contenu
+  const loveText =
+"Je n’arrive même pas à expliquer à quel point je suis reconnaissante de t’avoir dans ma vie. "+
 "Avec toi, je me sens en sécurité, aimée, choisie… et tellement fière d’être ta femme.\n\n"+
 "Je suis vraiment heureuse de vivre avec toi, de vivre toutes nos habitudes, nos fous rires du quotidien, "+
 "et tous ces petits moments qui deviennent précieux juste parce que c’est avec toi.\n\n"+
 "Tu es mon calme, ma force, mon bonheur. Je suis super chanceuse… vraiment.\n\n"+
 "Merci d’être toi, merci d'avoir tenu à ta promesse...";
 
-  // Steps: on change SEULEMENT l'intro comme tu as demandé
+  // --- Steps (we only change what you asked) ---
   const steps = [
-    // Intro noir + chiffres au centre
-    { c:"n", t:"1", d:900, bg:"black", fw:false },
-    { c:"n", t:"2", d:900, bg:"black", fw:false },
-    { c:"n", t:"3", d:900, bg:"black", fw:false },
+    { type:"text", cls:"n", text:"1", ms:900, bg:"black", fireworks:false },
+    { type:"text", cls:"n", text:"2", ms:900, bg:"black", fireworks:false },
+    { type:"text", cls:"n", text:"3", ms:900, bg:"black", fireworks:false },
 
-    // Message rose + feux d'artifices
-    { c:"msg", t:wishLine, d:2600, bg:"pink", fw:true },
+    // galaxy pink + real fireworks
+    { type:"text", cls:"msg", text:wishLine, ms:2600, bg:"galaxy", fireworks:true },
 
-    // Ton texte (inchangé)
-    { c:"msg", t:toFathiText, d:8200, bg:null, fw:false },
+    // To Fathi title + message underneath (same content)
+    { type:"toFathi", ms:8200, bg:"galaxy", fireworks:true },
 
-    // Le reste comme avant
-    { c:"love", t:"Je t’aime plus que tu l'imagines 💞", d:2400, bg:null, fw:false },
-    { c:"hb", t:"Happy birthday mon amour 🎂✨", d:999999, bg:null, fw:true }
+    // keep the rest like before (you can adjust later if you want)
+    { type:"text", cls:"love", text:"Je t’aime plus que tu l'imagines 💞", ms:2400, bg:"galaxy", fireworks:true },
+    { type:"text", cls:"hb", text:"Happy birthday mon amour 🎂✨", ms:999999, bg:"galaxy", fireworks:true, showGifts:true }
   ];
 
-  function setBackground(bg){
-    document.body.classList.remove("bg-black","bg-pink");
-    if(bg === "black") document.body.classList.add("bg-black");
-    if(bg === "pink") document.body.classList.add("bg-pink");
+  function setBg(kind){
+    document.body.classList.remove("bg-black","bg-galaxy");
+    if(kind === "black") document.body.classList.add("bg-black");
+    if(kind === "galaxy") document.body.classList.add("bg-galaxy");
   }
 
-  function setFireworks(on){
-    fireworks.style.display = on ? "block" : "none";
+  // -------- Fireworks (real canvas) ----------
+  let fw = [];
+  let fwTimer = null;
+  let animating = false;
+
+  function resizeCanvas(){
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    fireworksCanvas.width = Math.floor(innerWidth * dpr);
+    fireworksCanvas.height = Math.floor(innerHeight * dpr);
+    fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener("resize", resizeCanvas);
+
+  function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function launch(){
+    const x = Math.random()*innerWidth*0.8 + innerWidth*0.1;
+    const y = innerHeight + 20;
+    const tx = x + (Math.random()*120 - 60);
+    const ty = Math.random()*innerHeight*0.35 + innerHeight*0.12;
+    fw.push({
+      phase:"launch",
+      x,y,
+      vx:(tx-x)/30,
+      vy:(ty-y)/30,
+      life:0,
+      color: rand([
+        "rgba(255,154,214,1)",
+        "rgba(255,91,181,1)",
+        "rgba(178,140,255,1)",
+        "rgba(126,240,255,1)",
+        "rgba(255,255,255,1)"
+      ])
+    });
   }
 
-  let i = 0;
-  function nextStep(){
-    const s = steps[i];
+  function explode(p){
+    const parts = 90 + Math.floor(Math.random()*60);
+    for(let i=0;i<parts;i++){
+      const ang = Math.random()*Math.PI*2;
+      const sp = Math.random()*4.8 + 1.2;
+      fw.push({
+        phase:"spark",
+        x:p.x, y:p.y,
+        vx: Math.cos(ang)*sp,
+        vy: Math.sin(ang)*sp,
+        g: 0.06 + Math.random()*0.03,
+        a: 1,
+        r: 1 + Math.random()*1.6,
+        color: p.color
+      });
+    }
+  }
 
-    // background control
-    if(s.bg !== null) setBackground(s.bg);
+  function draw(){
+    if(!animating) return;
 
-    // fireworks control
-    setFireworks(!!s.fw);
+    fctx.fillStyle = "rgba(0,0,0,.12)";
+    fctx.fillRect(0,0,innerWidth,innerHeight);
 
-    // render text
-    screen.className = s.c;
-    screen.textContent = s.t;
+    const next = [];
+    for(const p of fw){
+      if(p.phase === "launch"){
+        p.life++;
+        p.x += p.vx; p.y += p.vy;
 
-    if(s.c === "hb"){
-      giftBtn.style.display = "block";
+        fctx.beginPath();
+        fctx.fillStyle = p.color;
+        fctx.arc(p.x, p.y, 2.2, 0, Math.PI*2);
+        fctx.fill();
+
+        if(p.life >= 30){
+          explode(p);
+        } else {
+          next.push(p);
+        }
+      } else {
+        p.vy += p.g;
+        p.x += p.vx; p.y += p.vy;
+        p.a -= 0.016 + Math.random()*0.01;
+
+        if(p.a > 0){
+          fctx.beginPath();
+          const c = p.color.replace(/rgba\(([^)]+),1\)/, (m, inner) => `rgba(${inner},${p.a})`);
+          fctx.fillStyle = c;
+          fctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          fctx.fill();
+          next.push(p);
+        }
+      }
+    }
+    fw = next;
+    requestAnimationFrame(draw);
+  }
+
+  function startFireworks(){
+    fireworksCanvas.style.display = "block";
+    resizeCanvas();
+    animating = true;
+    fw = [];
+    if(fwTimer) clearInterval(fwTimer);
+    fwTimer = setInterval(launch, 420);
+    for(let i=0;i<4;i++) setTimeout(launch, i*160);
+    draw();
+  }
+
+  function stopFireworks(){
+    animating = false;
+    fireworksCanvas.style.display = "none";
+    if(fwTimer){ clearInterval(fwTimer); fwTimer=null; }
+    fw = [];
+    fctx.clearRect(0,0,innerWidth,innerHeight);
+  }
+
+  // -------- Sequence rendering ----------
+  let idx = 0;
+
+  function renderStep(){
+    const s = steps[idx];
+
+    if(s.bg) setBg(s.bg);
+
+    if(s.fireworks){
+      if(!animating) startFireworks();
+    } else {
+      if(animating) stopFireworks();
+    }
+
+    giftBtn.style.display = "none";
+
+    if(s.type === "text"){
+      screen.className = s.cls;
+      screen.textContent = s.text;
+      if(s.showGifts) giftBtn.style.display = "block";
+
+      if(s.cls === "hb") return;
+      setTimeout(()=>{ idx++; renderStep(); }, s.ms);
       return;
     }
-    setTimeout(()=>{ i++; nextStep(); }, s.d);
-  }
-  nextStep();
 
-  // Gifts open
+    if(s.type === "toFathi"){
+      // Title + message under (you asked: title then go down)
+      screen.className = "msg";
+      screen.innerHTML =
+        `<div class="toTitle">To Fathi ❤️</div>` +
+        `<div>${loveText.replaceAll("\n","<br>")}</div>`;
+      setTimeout(()=>{ idx++; renderStep(); }, s.ms);
+      return;
+    }
+  }
+
+  renderStep();
+
+  // -------- Gifts navigation (unchanged) ----------
   giftBtn.onclick = () => panel.style.display = "block";
   function closePanel(){ panel.style.display = "none"; }
   function back(){
@@ -299,13 +418,13 @@
     document.getElementById("gift2").style.display = "block";
   }
 
-  // Slideshow
+  // Slideshow (unchanged)
   const slides = document.querySelectorAll("#slideshow .slide");
-  let idx = 0;
+  let sidx = 0;
   setInterval(()=>{
-    slides[idx].classList.remove("show");
-    idx = (idx + 1) % slides.length;
-    slides[idx].classList.add("show");
+    slides[sidx].classList.remove("show");
+    sidx = (sidx + 1) % slides.length;
+    slides[sidx].classList.add("show");
   }, 2500);
 </script>
 
