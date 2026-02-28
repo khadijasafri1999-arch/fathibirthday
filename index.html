@@ -463,8 +463,26 @@
 
 </body>
 </html>
+  function showGift2(){
+    document.getElementById("choose").style.display = "none";
+    document.getElementById("gift2").style.display = "block";
+  }
+
+  // Slideshow (unchanged)
+  const slides = document.querySelectorAll("#slideshow .slide");
+  let sidx = 0;
+  setInterval(()=>{
+    slides[sidx].classList.remove("show");
+    sidx = (sidx + 1) % slides.length;
+    slides[sidx].classList.add("show");
+  }, 2500);
 </script>
 
 </body>
 </html>
+</script>
+
+</body>
+</html>
+
 
