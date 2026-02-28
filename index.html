@@ -8,7 +8,7 @@
 <style>
   :root{
     --pink:#ff5bb5; --pink2:#ff9ad6; --violet:#b28cff; --cyan:#7ef0ff;
-    --text:#fff6fb; --muted:rgba(255,255,255,.82);
+    --text:#fff6fb;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -33,7 +33,6 @@
   }
   body.bg-black{ background:#000; }
 
-  /* Real fireworks canvas */
   canvas#fireworks{
     position:fixed; inset:0;
     width:100%; height:100%;
@@ -52,7 +51,6 @@
     align-items:center;
     justify-content:center;
     padding: 18px;
-    text-align:center;
   }
 
   #screen{
@@ -72,7 +70,6 @@
     margin-bottom: 14px;
   }
 
-  /* gifts button */
   #giftBtn{
     position:fixed;
     left:50%;
@@ -90,7 +87,6 @@
     z-index:5;
   }
 
-  /* Panel */
   #panel{
     position:fixed;
     inset:0;
@@ -175,29 +171,20 @@
       <button class="backBtn" onclick="closePanel()">Fermer</button>
     </div>
 
-    <!-- Gift 1 -->
     <div id="gift1" style="display:none;">
       <button class="backBtn" onclick="back()">← Revenir</button>
       <h3>🎥 Gift 1</h3>
-      <video id="videoGift1"
-             src="gift1.mp4"
-             controls
-             playsinline
-             preload="metadata"></video>
+      <video src="gift1.mp4" controls playsinline preload="metadata"></video>
     </div>
 
-    <!-- Gift 2 -->
     <div id="gift2" style="display:none;">
       <button class="backBtn" onclick="back()">← Revenir</button>
       <h3>Our love story 💖</h3>
 
+      <!-- ✅ PAS DE DOSSIER : photos à la racine -->
       <div class="slideshow" id="slideshow">
-        <img class="slide show" src="photos/photo1.png">
-        <img class="slide" src="photos/photo2.png">
-        <img class="slide" src="photos/photo3.png">
-        <img class="slide" src="photos/photo4.png">
-        <img class="slide" src="photos/photo5.png">
-        <img class="slide" src="photos/photo6.png">
+        <img class="slide show" src="photo1.png" alt="photo1">
+        <img class="slide" src="photo2.png" alt="photo2">
       </div>
     </div>
 
@@ -212,10 +199,8 @@
   const fireworksCanvas = document.getElementById("fireworks");
   const fctx = fireworksCanvas.getContext("2d");
 
-  // ✅ corrected phrase + heart
   const wishLine = "I want you all to wish a happy birthday to my man ❤️";
 
-  // ✅ your message (UNCHANGED)
   const loveText =
 "Je n’arrive même pas à expliquer à quel point je suis reconnaissante de t’avoir dans ma vie. "+
 "Avec toi, je me sens en sécurité, aimée, choisie… et tellement fière d’être ta femme.\n\n"+
@@ -224,19 +209,14 @@
 "Tu es mon calme, ma force, mon bonheur. Je suis super chanceuse… vraiment.\n\n"+
 "Merci d’être toi, merci d'avoir tenu à ta promesse...";
 
-  // --- timing (To Fathi ~ 15 sec) ---
   const TO_FATHI_MS = 15000;
 
-  // --- Steps: only intro/message changed like you asked ---
   const steps = [
     { type:"text", cls:"n", text:"1", ms:900, bg:"black", fireworks:false },
     { type:"text", cls:"n", text:"2", ms:900, bg:"black", fireworks:false },
     { type:"text", cls:"n", text:"3", ms:900, bg:"black", fireworks:false },
-
     { type:"text", cls:"msg", text:wishLine, ms:2800, bg:"galaxy", fireworks:true },
-
     { type:"toFathi", ms:TO_FATHI_MS, bg:"galaxy", fireworks:true },
-
     { type:"text", cls:"love", text:"Je t’aime plus que tu l'imagines 💞", ms:2400, bg:"galaxy", fireworks:true },
     { type:"text", cls:"hb", text:"Happy birthday mon amour 🎂✨", ms:999999, bg:"galaxy", fireworks:true, showGifts:true }
   ];
@@ -247,7 +227,7 @@
     if(kind === "galaxy") document.body.classList.add("bg-galaxy");
   }
 
-  // -------- Realistic GOLD fireworks (soft) ----------
+  // Fireworks (soft)
   let fw = [];
   let fwTimer = null;
   let animating = false;
@@ -271,27 +251,25 @@
     fw.push({
       phase:"launch",
       x,y,
-      vx:(tx-x)/32,          // slower
+      vx:(tx-x)/32,
       vy:(ty-y)/32,
       life:0,
       color: rand([
-        "rgba(255, 214, 102, 1)",  // gold
-        "rgba(255, 198, 64, 1)",   // deep gold
-        "rgba(255, 236, 170, 1)",  // pale gold
-        "rgba(255, 224, 130, 1)",  // warm gold
-        "rgba(255, 255, 255, 1)"   // sparkle white
+        "rgba(255, 214, 102, 1)",
+        "rgba(255, 198, 64, 1)",
+        "rgba(255, 236, 170, 1)",
+        "rgba(255, 224, 130, 1)",
+        "rgba(255, 255, 255, 1)"
       ])
     });
   }
 
   function explode(p){
-    // fewer particles = less disturbing
     const parts = 55 + Math.floor(Math.random()*25);
 
     for(let i=0;i<parts;i++){
       const ang = Math.random()*Math.PI*2;
-      const sp = Math.random()*3.2 + 0.8; // softer speed
-
+      const sp = Math.random()*3.2 + 0.8;
       fw.push({
         phase:"spark",
         x:p.x, y:p.y,
@@ -304,30 +282,10 @@
         drag: 0.985 + Math.random()*0.01
       });
     }
-
-    // light twinkles
-    const twinkles = 10 + Math.floor(Math.random()*8);
-    for(let i=0;i<twinkles;i++){
-      const ang = Math.random()*Math.PI*2;
-      const sp = Math.random()*2.2 + 0.3;
-      fw.push({
-        phase:"spark",
-        x:p.x, y:p.y,
-        vx: Math.cos(ang)*sp,
-        vy: Math.sin(ang)*sp,
-        g: 0.04 + Math.random()*0.015,
-        a: 0.7,
-        r: 0.7 + Math.random()*0.8,
-        color: "rgba(255,255,255,1)",
-        drag: 0.99
-      });
-    }
   }
 
   function draw(){
     if(!animating) return;
-
-    // very soft fade (no harsh flashing)
     fctx.fillStyle = "rgba(0,0,0,.06)";
     fctx.fillRect(0,0,innerWidth,innerHeight);
 
@@ -337,7 +295,6 @@
         p.life++;
         p.x += p.vx; p.y += p.vy;
 
-        // small launch glow
         fctx.beginPath();
         fctx.fillStyle = p.color;
         fctx.arc(p.x, p.y, 2.0, 0, Math.PI*2);
@@ -349,16 +306,10 @@
           next.push(p);
         }
       } else {
-        // gentle drag
         const drag = p.drag || 0.99;
-        p.vx *= drag;
-        p.vy *= drag;
-
+        p.vx *= drag; p.vy *= drag;
         p.vy += p.g;
-        p.x += p.vx;
-        p.y += p.vy;
-
-        // slower fade
+        p.x += p.vx; p.y += p.vy;
         p.a -= 0.010 + Math.random()*0.006;
 
         if(p.a > 0){
@@ -381,8 +332,7 @@
     animating = true;
     fw = [];
     if(fwTimer) clearInterval(fwTimer);
-    fwTimer = setInterval(launch, 850); // slower rhythm
-    for(let i=0;i<2;i++) setTimeout(launch, i*250);
+    fwTimer = setInterval(launch, 850);
     draw();
   }
 
@@ -394,29 +344,22 @@
     fctx.clearRect(0,0,innerWidth,innerHeight);
   }
 
-  // -------- Sequence rendering ----------
+  // Sequence
   let stepIndex = 0;
-
   function renderStep(){
     const s = steps[stepIndex];
-
     if(s.bg) setBg(s.bg);
 
-    if(s.fireworks){
-      if(!animating) startFireworks();
-    } else {
-      if(animating) stopFireworks();
-    }
+    if(s.fireworks){ if(!animating) startFireworks(); }
+    else { if(animating) stopFireworks(); }
 
     giftBtn.style.display = "none";
 
     if(s.type === "text"){
       screen.className = s.cls;
       screen.textContent = s.text;
-
       if(s.showGifts) giftBtn.style.display = "block";
       if(s.cls === "hb") return;
-
       setTimeout(()=>{ stepIndex++; renderStep(); }, s.ms);
       return;
     }
@@ -426,15 +369,13 @@
       screen.innerHTML =
         `<div class="toTitle">To Fathi ❤️</div>` +
         `<div>${loveText.replaceAll("\n","<br>")}</div>`;
-
       setTimeout(()=>{ stepIndex++; renderStep(); }, s.ms);
       return;
     }
   }
-
   renderStep();
 
-  // -------- Gifts navigation (unchanged) ----------
+  // Gifts navigation
   giftBtn.onclick = () => panel.style.display = "block";
   function closePanel(){ panel.style.display = "none"; }
   function back(){
@@ -451,10 +392,11 @@
     document.getElementById("gift2").style.display = "block";
   }
 
-  // Slideshow (unchanged)
+  // Slideshow (2 images)
   const slides = document.querySelectorAll("#slideshow .slide");
   let sidx = 0;
   setInterval(()=>{
+    if(!slides.length) return;
     slides[sidx].classList.remove("show");
     sidx = (sidx + 1) % slides.length;
     slides[sidx].classList.add("show");
@@ -462,4 +404,5 @@
 </script>
 
 </body>
-</html> je veux que tu laisse le meme code tu chose juste les photo qui slide il sont PNG pas en jpg est ce que c'est nécessaire de s les avoir en JPG
+</html>
+
