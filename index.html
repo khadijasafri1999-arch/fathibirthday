@@ -83,7 +83,7 @@
     z-index:50;
   }
 
-  /* Question buttons (Yes / No) */
+  /* Question buttons */
   #questionWrap{
     display:none;
     margin-top: 18px;
@@ -116,7 +116,7 @@
     transform: translate(-50%,-50%);
   }
 
-  /* Small dialog after YES */
+  /* Dialog after YES */
   #loveDialog{
     display:none;
     margin-top: 16px;
@@ -126,17 +126,6 @@
     border: 1px solid rgba(255,255,255,.14);
     font-weight: 900;
     line-height:1.45;
-  }
-  .kawaii{
-    display:inline-block;
-    margin-left:8px;
-    font-size: 26px;
-    animation: bounce 0.9s infinite;
-    transform-origin: 50% 100%;
-  }
-  @keyframes bounce{
-    0%,100%{ transform: translateY(0) rotate(-2deg); }
-    50%{ transform: translateY(-10px) rotate(2deg); }
   }
 
   #panel{
@@ -196,11 +185,22 @@
   .slide{
     position:absolute; inset:0;
     width:100%; height:100%;
-    object-fit: contain; /* show full image */
+    object-fit: contain;
     opacity:0;
     transition:opacity .9s;
   }
   .slide.show{ opacity:1; }
+
+  /* Gift 3 message */
+  .note{
+    margin-top:16px;
+    padding:14px 16px;
+    border-radius:18px;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.14);
+    font-weight: 950;
+    line-height:1.45;
+  }
 </style>
 </head>
 
@@ -220,6 +220,7 @@
       <h2>Open your gifts 🎁</h2>
       <div class="envelope" onclick="showGift1()">💌 Gift 1 — Une vidéo</div>
       <div class="envelope" onclick="showGift2()">💌 Gift 2 — Our love story</div>
+      <div class="envelope" onclick="showGift3()">💌 Gift 3 — Surprise</div>
       <button class="backBtn" onclick="closePanel()">Fermer</button>
     </div>
 
@@ -237,6 +238,12 @@
         <img class="slide show" src="photo1.png" alt="photo1">
         <img class="slide" src="photo2.png" alt="photo2">
       </div>
+    </div>
+
+    <div id="gift3" style="display:none;">
+      <button class="backBtn" onclick="back()">← Revenir</button>
+      <h3>🎁 Gift 3</h3>
+      <div class="note">Check the third drawer in the transformation room 🤭 hihihi</div>
     </div>
 
   </div>
@@ -262,20 +269,14 @@
 
   const TO_FATHI_MS = 15000;
 
-  // Steps: we REPLACE the final step with an interactive question step.
   const steps = [
     { type:"text", cls:"n", text:"1", ms:900, bg:"black", fireworks:false },
     { type:"text", cls:"n", text:"2", ms:900, bg:"black", fireworks:false },
     { type:"text", cls:"n", text:"3", ms:900, bg:"black", fireworks:false },
-
     { type:"text", cls:"msg", text:wishLine, ms:2800, bg:"galaxy", fireworks:true },
     { type:"toFathi", ms:TO_FATHI_MS, bg:"galaxy", fireworks:true },
     { type:"text", cls:"love", text:"Je t’aime plus que tu l'imagines 💞", ms:2400, bg:"galaxy", fireworks:true },
-
-    // HAPPY BIRTHDAY (short), then go to question scene
     { type:"text", cls:"hb", text:"Happy birthday mon amour 🎂✨", ms:2400, bg:"galaxy", fireworks:true },
-
-    // Interactive question scene (no auto timeout)
     { type:"question", bg:"galaxy", fireworks:true }
   ];
 
@@ -285,11 +286,11 @@
     if(kind === "galaxy") document.body.classList.add("bg-galaxy");
   }
 
-  // -------- Fireworks (soft gold) ----------
+  // Fireworks
   let fw = [];
   let fwTimer = null;
   let animating = false;
-  let fireworkSpeed = 850; // normal
+  let fireworkSpeed = 850;
 
   function resizeCanvas(){
     const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -325,11 +326,9 @@
 
   function explode(p){
     const parts = 55 + Math.floor(Math.random()*25);
-
     for(let i=0;i<parts;i++){
       const ang = Math.random()*Math.PI*2;
       const sp = Math.random()*3.2 + 0.8;
-
       fw.push({
         phase:"spark",
         x:p.x, y:p.y,
@@ -342,7 +341,6 @@
         drag: 0.985 + Math.random()*0.01
       });
     }
-
     const twinkles = 10 + Math.floor(Math.random()*8);
     for(let i=0;i<twinkles;i++){
       const ang = Math.random()*Math.PI*2;
@@ -363,7 +361,6 @@
 
   function draw(){
     if(!animating) return;
-
     fctx.fillStyle = "rgba(0,0,0,.06)";
     fctx.fillRect(0,0,innerWidth,innerHeight);
 
@@ -378,20 +375,13 @@
         fctx.arc(p.x, p.y, 2.0, 0, Math.PI*2);
         fctx.fill();
 
-        if(p.life >= 32){
-          explode(p);
-        } else {
-          next.push(p);
-        }
+        if(p.life >= 32){ explode(p); }
+        else { next.push(p); }
       } else {
         const drag = p.drag || 0.99;
-        p.vx *= drag;
-        p.vy *= drag;
-
+        p.vx *= drag; p.vy *= drag;
         p.vy += p.g;
-        p.x += p.vx;
-        p.y += p.vy;
-
+        p.x += p.vx; p.y += p.vy;
         p.a -= 0.010 + Math.random()*0.006;
 
         if(p.a > 0){
@@ -428,7 +418,6 @@
   }
 
   function setFireworkIntensity(high){
-    // higher intensity = more frequent launches
     fireworkSpeed = high ? 520 : 850;
     if(animating){
       clearInterval(fwTimer);
@@ -436,27 +425,19 @@
     }
   }
 
-  // -------- Sequence rendering ----------
   let stepIndex = 0;
-
   function renderStep(){
     const s = steps[stepIndex];
-
     if(s.bg) setBg(s.bg);
 
-    if(s.fireworks){
-      if(!animating) startFireworks();
-    } else {
-      if(animating) stopFireworks();
-    }
+    if(s.fireworks){ if(!animating) startFireworks(); }
+    else { if(animating) stopFireworks(); }
 
-    // Default: hide gift button during story
     giftBtn.style.display = "none";
 
     if(s.type === "text"){
       screen.className = s.cls;
       screen.textContent = s.text;
-
       setTimeout(()=>{ stepIndex++; renderStep(); }, s.ms);
       return;
     }
@@ -466,7 +447,6 @@
       screen.innerHTML =
         `<div class="toTitle">To Fathi ❤️</div>` +
         `<div>${loveText.replaceAll("\n","<br>")}</div>`;
-
       setTimeout(()=>{ stepIndex++; renderStep(); }, s.ms);
       return;
     }
@@ -476,12 +456,10 @@
       return;
     }
   }
-
   renderStep();
 
-  // -------- Love question scene ----------
   function showLoveQuestion(){
-    setFireworkIntensity(true); // more fireworks here
+    setFireworkIntensity(true);
     screen.className = "msg";
 
     screen.innerHTML = `
@@ -494,7 +472,6 @@
 
       <div id="loveDialog">
         Oui je savais que tu m’aimais 😋💖 voici tes cadeaux
-        <span class="kawaii">ᕕ( ᐛ )ᕗ</span>
       </div>
     `;
 
@@ -505,7 +482,6 @@
 
     wrap.style.display = "block";
 
-    // Make NO escape
     const moveNo = () => {
       const padding = 10;
       const w = wrap.clientWidth;
@@ -522,7 +498,6 @@
       noBtn.style.transform = "none";
     };
 
-    // On try to click / hover / touch, it moves away
     ["mouseenter","mouseover","pointerdown","touchstart","click"].forEach(ev=>{
       noBtn.addEventListener(ev, (e)=>{
         e.preventDefault();
@@ -530,28 +505,22 @@
       }, {passive:false});
     });
 
-    // YES: show dialog + kawaii + then show gifts button
     yesBtn.addEventListener("click", ()=>{
       loveDialog.style.display = "block";
-      // keep fireworks high for a moment, then normal
       setTimeout(()=> setFireworkIntensity(false), 2500);
-
-      // show Open gifts after a short delay
-      setTimeout(()=>{
-        giftBtn.style.display = "block";
-      }, 900);
+      setTimeout(()=>{ giftBtn.style.display = "block"; }, 900);
     });
 
-    // initial random position
     moveNo();
   }
 
-  // -------- Gifts navigation ----------
+  // Gifts navigation
   giftBtn.onclick = () => panel.style.display = "block";
   function closePanel(){ panel.style.display = "none"; }
   function back(){
     document.getElementById("gift1").style.display = "none";
     document.getElementById("gift2").style.display = "none";
+    document.getElementById("gift3").style.display = "none";
     document.getElementById("choose").style.display = "block";
   }
   function showGift1(){
@@ -561,6 +530,10 @@
   function showGift2(){
     document.getElementById("choose").style.display = "none";
     document.getElementById("gift2").style.display = "block";
+  }
+  function showGift3(){
+    document.getElementById("choose").style.display = "none";
+    document.getElementById("gift3").style.display = "block";
   }
 
   // Slideshow (2 images)
