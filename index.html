@@ -8,7 +8,7 @@
 <style>
   :root{
     --pink:#ff5bb5; --pink2:#ff9ad6; --violet:#b28cff; --cyan:#7ef0ff;
-    --text:#fff6fb;
+    --text:#fff6fb; --muted:rgba(255,255,255,.82);
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -22,7 +22,6 @@
     transition: background .6s ease;
   }
 
-  /* Galaxy pink (dark tendency) */
   body.bg-galaxy{
     background:
       radial-gradient(1200px 700px at 10% 15%, rgba(255,91,181,.45), transparent 60%),
@@ -51,6 +50,7 @@
     align-items:center;
     justify-content:center;
     padding: 18px;
+    text-align:center;
   }
 
   #screen{
@@ -63,12 +63,8 @@
   .msg{ font-size: clamp(18px, 3.8vw, 30px); font-weight:850; line-height:1.55; }
   .love{ font-size: clamp(28px, 8vw, 56px); font-weight:1000; }
   .hb{ font-size: clamp(30px, 8.5vw, 62px); font-weight:1000; }
-
-  .toTitle{
-    font-size: clamp(22px, 5.5vw, 40px);
-    font-weight: 1000;
-    margin-bottom: 14px;
-  }
+  .questionTitle{ font-size: clamp(22px, 5.2vw, 40px); font-weight:1000; line-height:1.35; }
+  .toTitle{ font-size: clamp(22px, 5.5vw, 40px); font-weight: 1000; margin-bottom: 14px; }
 
   #giftBtn{
     position:fixed;
@@ -84,7 +80,63 @@
     color:#180014;
     background: linear-gradient(135deg, var(--pink2), var(--violet));
     box-shadow: 0 18px 40px rgba(0,0,0,.25);
-    z-index:5;
+    z-index:50;
+  }
+
+  /* Question buttons (Yes / No) */
+  #questionWrap{
+    display:none;
+    margin-top: 18px;
+    position:relative;
+    width:min(520px, 92vw);
+    height: 220px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  .btn{
+    border:none;
+    cursor:pointer;
+    padding:14px 18px;
+    border-radius:18px;
+    font-weight:1000;
+    font-size: 18px;
+    box-shadow: 0 18px 40px rgba(0,0,0,.25);
+  }
+  #yesBtn{
+    background: linear-gradient(135deg, var(--pink2), var(--violet));
+    color:#180014;
+    margin-right:10px;
+  }
+  #noBtn{
+    background: rgba(255,255,255,.14);
+    color:white;
+    position:absolute;
+    left: 55%;
+    top: 56%;
+    transform: translate(-50%,-50%);
+  }
+
+  /* Small dialog after YES */
+  #loveDialog{
+    display:none;
+    margin-top: 16px;
+    padding:14px 16px;
+    border-radius:18px;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.14);
+    font-weight: 900;
+    line-height:1.45;
+  }
+  .kawaii{
+    display:inline-block;
+    margin-left:8px;
+    font-size: 26px;
+    animation: bounce 0.9s infinite;
+    transform-origin: 50% 100%;
+  }
+  @keyframes bounce{
+    0%,100%{ transform: translateY(0) rotate(-2deg); }
+    50%{ transform: translateY(-10px) rotate(2deg); }
   }
 
   #panel{
@@ -95,7 +147,7 @@
     overflow:auto;
     padding:18px;
     -webkit-overflow-scrolling: touch;
-    z-index:10;
+    z-index:60;
   }
   .inner{
     max-width:900px;
@@ -144,7 +196,7 @@
   .slide{
     position:absolute; inset:0;
     width:100%; height:100%;
-    object-fit:cover;
+    object-fit: contain; /* show full image */
     opacity:0;
     transition:opacity .9s;
   }
@@ -181,7 +233,6 @@
       <button class="backBtn" onclick="back()">← Revenir</button>
       <h3>Our love story 💖</h3>
 
-      <!-- ✅ PAS DE DOSSIER : photos à la racine -->
       <div class="slideshow" id="slideshow">
         <img class="slide show" src="photo1.png" alt="photo1">
         <img class="slide" src="photo2.png" alt="photo2">
@@ -211,14 +262,21 @@
 
   const TO_FATHI_MS = 15000;
 
+  // Steps: we REPLACE the final step with an interactive question step.
   const steps = [
     { type:"text", cls:"n", text:"1", ms:900, bg:"black", fireworks:false },
     { type:"text", cls:"n", text:"2", ms:900, bg:"black", fireworks:false },
     { type:"text", cls:"n", text:"3", ms:900, bg:"black", fireworks:false },
+
     { type:"text", cls:"msg", text:wishLine, ms:2800, bg:"galaxy", fireworks:true },
     { type:"toFathi", ms:TO_FATHI_MS, bg:"galaxy", fireworks:true },
     { type:"text", cls:"love", text:"Je t’aime plus que tu l'imagines 💞", ms:2400, bg:"galaxy", fireworks:true },
-    { type:"text", cls:"hb", text:"Happy birthday mon amour 🎂✨", ms:999999, bg:"galaxy", fireworks:true, showGifts:true }
+
+    // HAPPY BIRTHDAY (short), then go to question scene
+    { type:"text", cls:"hb", text:"Happy birthday mon amour 🎂✨", ms:2400, bg:"galaxy", fireworks:true },
+
+    // Interactive question scene (no auto timeout)
+    { type:"question", bg:"galaxy", fireworks:true }
   ];
 
   function setBg(kind){
@@ -227,10 +285,11 @@
     if(kind === "galaxy") document.body.classList.add("bg-galaxy");
   }
 
-  // Fireworks (soft)
+  // -------- Fireworks (soft gold) ----------
   let fw = [];
   let fwTimer = null;
   let animating = false;
+  let fireworkSpeed = 850; // normal
 
   function resizeCanvas(){
     const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -270,6 +329,7 @@
     for(let i=0;i<parts;i++){
       const ang = Math.random()*Math.PI*2;
       const sp = Math.random()*3.2 + 0.8;
+
       fw.push({
         phase:"spark",
         x:p.x, y:p.y,
@@ -282,10 +342,28 @@
         drag: 0.985 + Math.random()*0.01
       });
     }
+
+    const twinkles = 10 + Math.floor(Math.random()*8);
+    for(let i=0;i<twinkles;i++){
+      const ang = Math.random()*Math.PI*2;
+      const sp = Math.random()*2.2 + 0.3;
+      fw.push({
+        phase:"spark",
+        x:p.x, y:p.y,
+        vx: Math.cos(ang)*sp,
+        vy: Math.sin(ang)*sp,
+        g: 0.04 + Math.random()*0.015,
+        a: 0.7,
+        r: 0.7 + Math.random()*0.8,
+        color: "rgba(255,255,255,1)",
+        drag: 0.99
+      });
+    }
   }
 
   function draw(){
     if(!animating) return;
+
     fctx.fillStyle = "rgba(0,0,0,.06)";
     fctx.fillRect(0,0,innerWidth,innerHeight);
 
@@ -307,9 +385,13 @@
         }
       } else {
         const drag = p.drag || 0.99;
-        p.vx *= drag; p.vy *= drag;
+        p.vx *= drag;
+        p.vy *= drag;
+
         p.vy += p.g;
-        p.x += p.vx; p.y += p.vy;
+        p.x += p.vx;
+        p.y += p.vy;
+
         p.a -= 0.010 + Math.random()*0.006;
 
         if(p.a > 0){
@@ -332,7 +414,8 @@
     animating = true;
     fw = [];
     if(fwTimer) clearInterval(fwTimer);
-    fwTimer = setInterval(launch, 850);
+    fwTimer = setInterval(launch, fireworkSpeed);
+    for(let i=0;i<2;i++) setTimeout(launch, i*250);
     draw();
   }
 
@@ -344,22 +427,36 @@
     fctx.clearRect(0,0,innerWidth,innerHeight);
   }
 
-  // Sequence
+  function setFireworkIntensity(high){
+    // higher intensity = more frequent launches
+    fireworkSpeed = high ? 520 : 850;
+    if(animating){
+      clearInterval(fwTimer);
+      fwTimer = setInterval(launch, fireworkSpeed);
+    }
+  }
+
+  // -------- Sequence rendering ----------
   let stepIndex = 0;
+
   function renderStep(){
     const s = steps[stepIndex];
+
     if(s.bg) setBg(s.bg);
 
-    if(s.fireworks){ if(!animating) startFireworks(); }
-    else { if(animating) stopFireworks(); }
+    if(s.fireworks){
+      if(!animating) startFireworks();
+    } else {
+      if(animating) stopFireworks();
+    }
 
+    // Default: hide gift button during story
     giftBtn.style.display = "none";
 
     if(s.type === "text"){
       screen.className = s.cls;
       screen.textContent = s.text;
-      if(s.showGifts) giftBtn.style.display = "block";
-      if(s.cls === "hb") return;
+
       setTimeout(()=>{ stepIndex++; renderStep(); }, s.ms);
       return;
     }
@@ -369,13 +466,87 @@
       screen.innerHTML =
         `<div class="toTitle">To Fathi ❤️</div>` +
         `<div>${loveText.replaceAll("\n","<br>")}</div>`;
+
       setTimeout(()=>{ stepIndex++; renderStep(); }, s.ms);
       return;
     }
+
+    if(s.type === "question"){
+      showLoveQuestion();
+      return;
+    }
   }
+
   renderStep();
 
-  // Gifts navigation
+  // -------- Love question scene ----------
+  function showLoveQuestion(){
+    setFireworkIntensity(true); // more fireworks here
+    screen.className = "msg";
+
+    screen.innerHTML = `
+      <div class="questionTitle">Fathi, before giving you your gifts…<br>Do you love me 🥺?</div>
+
+      <div id="questionWrap">
+        <button id="yesBtn" class="btn">Yes</button>
+        <button id="noBtn" class="btn">No</button>
+      </div>
+
+      <div id="loveDialog">
+        Oui je savais que tu m’aimais 😋💖 voici tes cadeaux
+        <span class="kawaii">ᕕ( ᐛ )ᕗ</span>
+      </div>
+    `;
+
+    const wrap = document.getElementById("questionWrap");
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn  = document.getElementById("noBtn");
+    const loveDialog = document.getElementById("loveDialog");
+
+    wrap.style.display = "block";
+
+    // Make NO escape
+    const moveNo = () => {
+      const padding = 10;
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+
+      const btnW = noBtn.offsetWidth || 90;
+      const btnH = noBtn.offsetHeight || 50;
+
+      const x = Math.max(padding, Math.random() * (w - btnW - padding));
+      const y = Math.max(padding, Math.random() * (h - btnH - padding));
+
+      noBtn.style.left = x + "px";
+      noBtn.style.top  = y + "px";
+      noBtn.style.transform = "none";
+    };
+
+    // On try to click / hover / touch, it moves away
+    ["mouseenter","mouseover","pointerdown","touchstart","click"].forEach(ev=>{
+      noBtn.addEventListener(ev, (e)=>{
+        e.preventDefault();
+        moveNo();
+      }, {passive:false});
+    });
+
+    // YES: show dialog + kawaii + then show gifts button
+    yesBtn.addEventListener("click", ()=>{
+      loveDialog.style.display = "block";
+      // keep fireworks high for a moment, then normal
+      setTimeout(()=> setFireworkIntensity(false), 2500);
+
+      // show Open gifts after a short delay
+      setTimeout(()=>{
+        giftBtn.style.display = "block";
+      }, 900);
+    });
+
+    // initial random position
+    moveNo();
+  }
+
+  // -------- Gifts navigation ----------
   giftBtn.onclick = () => panel.style.display = "block";
   function closePanel(){ panel.style.display = "none"; }
   function back(){
@@ -405,4 +576,3 @@
 
 </body>
 </html>
-
